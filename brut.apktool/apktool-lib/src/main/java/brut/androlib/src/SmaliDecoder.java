@@ -90,8 +90,9 @@ public class SmaliDecoder {
                 }
             }
 
-            // create the dex
-            DexBackedDexFile dexFile = DexFileFactory.loadDexFile(mApkFile, mDexFile, mApi);
+			// create the dex
+			File dexLocationFile = (mApkFile.isDirectory() ? new File(mApkFile, mDexFile) : mApkFile);
+            DexBackedDexFile dexFile = DexFileFactory.loadDexFile(dexLocationFile, mDexFile, mApi);
 
             if (dexFile.isOdexFile()) {
                 throw new AndrolibException("Warning: You are disassembling an odex file without deodexing it.");

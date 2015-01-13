@@ -174,7 +174,7 @@ public class Androlib {
         // with regular looping of apkFile for easy copy
         try {
             Directory unk = apkFile.getDirectory();
-            ZipExtFile apkZipFile = new ZipExtFile(apkFile.getAbsolutePath());
+            ZipExtFile apkZipFile = (apkFile.isDirectory() ? null : new ZipExtFile(apkFile.getAbsolutePath()));
 
             // loop all items in container recursively, ignoring any that are pre-defined by aapt
             Set<String> files = unk.getFiles(true);
@@ -183,20 +183,25 @@ public class Androlib {
 
                     // copy file out of archive into special "unknown" folder
                     unk.copyToDir(unknownOut, file);
-                    try {
-                        // ignore encryption
-                        apkZipFile.getEntry(file).getGeneralPurposeBit().useEncryption(false);
-                        invZipFile = apkZipFile.getEntry(file);
+					if (apkZipFile != null) {
+						try {
+							// ignore encryption
+							apkZipFile.getEntry(file).getGeneralPurposeBit().useEncryption(false);
+							invZipFile = apkZipFile.getEntry(file);
 
-                        // lets record the name of the file, and its compression type
-                        // so that we may re-include it the same way
-                        if (invZipFile != null) {
-                            mResUnknownFiles.addUnknownFileInfo(invZipFile.getName(), String.valueOf(invZipFile.getMethod()));
-                        }
-                    } catch (NullPointerException ignored) { }
+							// lets record the name of the file, and its compression type
+							// so that we may re-include it the same way
+							if (invZipFile != null) {
+								mResUnknownFiles.addUnknownFileInfo(invZipFile.getName(), String.valueOf(invZipFile.getMethod()));
+							}
+						} catch (NullPointerException ignored) { }
+					}
                 }
             }
-            apkZipFile.close();
+			
+			if (apkZipFile != null) {
+				apkZipFile.close();
+			}
         } catch (DirectoryException | IOException ex) {
             throw new AndrolibException(ex);
         }

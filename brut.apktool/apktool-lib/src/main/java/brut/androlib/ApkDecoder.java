@@ -75,10 +75,16 @@ public class ApkDecoder {
         if (!mForceDelete && outDir.exists()) {
             throw new OutDirExistsException();
         }
-
-        if (!mApkFile.isFile() || !mApkFile.canRead()) {
-            throw new InFileNotFoundException();
-        }
+		
+		if (mApkFile.isFile() && mApkFile.canRead()) {
+			mInputDirectoryMode = false;
+		}
+		else if (mApkFile.isDirectory() && mApkFile.exists()) {
+			mInputDirectoryMode = true;
+		}
+		else {
+			throw new InFileNotFoundException();
+		}
 
         try {
             OS.rmdir(outDir);
@@ -87,12 +93,14 @@ public class ApkDecoder {
         }
         outDir.mkdirs();
 
-        LOGGER.info("Using Apktool " + Androlib.getVersion() + " on " + mApkFile.getName());
+        LOGGER.info("Using Apktool " + Androlib.getVersion() + " on " + mApkFile.getName() + (mInputDirectoryMode ? " (directory)" : ""));
 
         if (hasResources()) {
             setTargetSdkVersion();
             setAnalysisMode(mAnalysisMode, true);
-            setCompressionMode();
+			if(!mInputDirectoryMode) {
+				setCompressionMode();
+			}
 
             switch (mDecodeResources) {
                 case DECODE_RESOURCES_NONE:
@@ -415,4 +423,6 @@ public class ApkDecoder {
     private boolean mCompressResources = false;
     private boolean mAnalysisMode = false;
     private int mApi = 15;
+	// Rus
+	private boolean mInputDirectoryMode = false;
 }
